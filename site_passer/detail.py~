@@ -1,0 +1,42 @@
+from .base import BasePasser
+
+class DetailPasser(BasePasser):
+    def get_news(self, categories):
+        result = {}
+        for category in categories:
+            category_name = category['name']
+            result[category_name] = []
+
+
+            url = f'{self.site_url}{category["href"]}'
+
+            category_soup = self.get_soup(url)
+
+            news_wrapper = category_soup.find('div', id='content-block')
+            news_list = news_wrapper.find_all('div', class_='sh-news')
+
+            result = []
+
+            print(f'[INFO] {category_name=}')
+
+            for i in news_list:
+                title = i.find('h2', class_='sh-title').get_text()
+                description = i.find('div', class_='sh-text').next.get_text(strip=True)
+                img_link = i.find('img').get('data-src')
+                side_date = i.find('div', class_='side-date').find_all('span')
+                side_date = [i.get_text() for i in side_date]
+                if len(side_date) == 2:
+                    time, comments = side_date
+                else:
+                    time = side_date[0]
+                    comments = 0
+
+                print(f'==== [INFO] {title=}')
+                result[category['name']].append({
+                    'title': title,
+                    'description': description,
+                    'img_link': img_link,
+                    'time': time,
+                    'comments': comments,
+                })
+        return result
